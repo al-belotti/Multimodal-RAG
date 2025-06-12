@@ -6,6 +6,7 @@ Multimodal RAG with Docling that lets you query PDFs containing text, tables, im
 
 
 ## What This Project Does
+Link to Medium article: [Docling-Powered RAG: Querying Over Complex PDFs](https://medium.com/@pritigupta.ds/docling-powered-rag-querying-over-complex-pdfs-d99f5f58bc33)
 
 This project is a **Streamlit-based application** on multimodal RAG that lets users:
 
