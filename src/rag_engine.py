@@ -5,10 +5,15 @@ from llama_index.llms.ollama import Ollama
 
 
 load_dotenv(override=True)
+LOCAL_SETTINGS = False
 
 class RAG:
-    def __init__(self, retriever, llm_name='gpt-5'):  #  llama3.2:latest or gpt-5 or tinyllama:1.1b 
-        self.llm_name = llm_name
+    def __init__(self, retriever):  #  llama3.2:latest or gpt-5 or tinyllama:1.1b 
+        if LOCAL_SETTINGS:
+            self.llm_name = 'llama3.2:latest'
+        else:
+            self.llm_name = 'gpt-5'
+
         self.llm = self._setup_llm()
         self.retriever = retriever
 
@@ -77,12 +82,14 @@ class RAG:
         """
 
     def _setup_llm(self):
-        return Ollama(model=self.llm_name, request_timeout=300000)   # in mms
-        # return AzureOpenAI(
-        #     api_version=os.environ["AZURE_OPENAI_API_VERSION"],
-        #     api_key=os.environ["AZURE_OPENAI_API_KEY"],
-        #     azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
-        # )
+        if LOCAL_SETTINGS:
+            return Ollama(model=self.llm_name, request_timeout=300000)   # in mms
+        else:
+            return AzureOpenAI(
+                api_version=os.environ["AZURE_OPENAI_API_VERSION"],
+                api_key=os.environ["AZURE_OPENAI_API_KEY"],
+                azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
+            )
 
     def generate_context(self, query):
         result = self.retriever.search(query)
@@ -108,18 +115,21 @@ class RAG:
                 user_answer=query
             )
 
-            response = self.llm.chat.completions.create(
-                model=self.llm_name,
-                messages=[
-                    {"role": "system", "content": "You are a helpful evaluator."},
-                    {"role": "user", "content": evaluation_prompt},
-                ]
-            )
-            assistant_reply = response.choices[0].message.content
+            if LOCAL_SETTINGS:
+                response = self.llm.complete(evaluation_prompt)
+                print(f">>>>> {response}")
+                assistant_reply = dict(response)['text']       
+            else:
+                response = self.llm.chat.completions.create(
+                    model=self.llm_name,
+                    messages=[
+                        {"role": "system", "content": "You are a helpful evaluator."},
+                        {"role": "user", "content": evaluation_prompt},
+                    ]
+                )
+                assistant_reply = response.choices[0].message.content
 
-            # response = self.llm.complete(evaluation_prompt)
-            # print(f">>>>> {response}")
-            # assistant_reply = dict(response)['text']
+
 
             # ✂️ Reset dello storico dopo la valutazione
             self.conversation_history = []
@@ -131,18 +141,21 @@ class RAG:
         context = self.generate_context(query)
         prompt = self.qa_prompt_tmpl_str.format(context=context, difficulty=difficulty, query=query)
 
-        response = self.llm.chat.completions.create(
-            model=self.llm_name,
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt},
-            ]
-        )
-        assistant_reply = response.choices[0].message.content
+        if LOCAL_SETTINGS:
+            response = self.llm.complete(prompt)
+            print(f">>>>> {response}")
+            assistant_reply = dict(response)['text']
+        else:
+            response = self.llm.chat.completions.create(
+                model=self.llm_name,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt},
+                ]
+            )
+            assistant_reply = response.choices[0].message.content
         
-        # response = self.llm.complete(prompt)
-        # print(f">>>>> {response}")
-        # assistant_reply = dict(response)['text']
+
 
         # 🧠 Aggiorna storico (massimo 3 messaggi)
         self.conversation_history = [
