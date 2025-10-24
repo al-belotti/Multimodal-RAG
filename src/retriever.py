@@ -8,7 +8,7 @@ class Retriever:
         self.vector_db = vector_db
         self.embeddata = embeddata
 
-    def search(self, query, top_k=3):
+    def search(self, query, top_k=7):
         query_embedding = self.embeddata.embed_model.get_query_embedding(query)
 
         start_time = time.time()
@@ -19,7 +19,7 @@ class Retriever:
             search_params=models.SearchParams(
                 quantization=models.QuantizationSearchParams(
                     ignore=True,
-                    rescore=True,
+                    rescore=True,   # re-ranking with vector similarity
                     oversampling=2.0,
                 )
             ),

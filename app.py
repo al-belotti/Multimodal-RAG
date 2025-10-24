@@ -46,6 +46,18 @@ with st.sidebar:
     st.markdown("<h1 style='text-align: center;'>🤖  Multimodal RAG - Query your document</h1>", unsafe_allow_html=True)
     st.header("Upload your PDF")
     uploaded_file = st.file_uploader("", type="pdf")
+
+    # Difficulty slider: map 1,2,3 to Easy, Medium, Hard
+    difficulty_map = {1: "easy", 2: "medium", 3: "hard"}
+    difficulty_level = st.slider(
+        "Select question difficulty",
+        min_value=1,
+        max_value=3,
+        value=2,  # default medium
+        format="%d"
+    )
+    # Store selected difficulty in session_state
+    st.session_state.difficulty = difficulty_map[difficulty_level]
     
 
     if uploaded_file:
@@ -55,7 +67,7 @@ with st.sidebar:
             status_placeholder.info("📥 File uploaded successfully")
         
             time.sleep(2.5)  # Delay before switching message
-        
+            name = uploaded_file.name.rsplit('.', 1)[0]
 
             with tempfile.TemporaryDirectory() as temp_dir:
                 file_path = os.path.join(temp_dir, uploaded_file.name)
@@ -67,22 +79,31 @@ with st.sidebar:
                 status_placeholder.info("Identifying document layout...")
                 progress_bar = st.progress(10)
 
+                found = any(
+                    os.path.isfile(f) and f.startswith(f"embeddings_{name}" + '.')
+                    for f in os.listdir('.')
+                )
 
-                # Convert to markdown
-                markdown_text = convert_pdf_to_markdown(file_path)
-                st.session_state.markdown_text = markdown_text
+                if not found:
+                    # Convert to markdown
+                    markdown_text = convert_pdf_to_markdown(file_path)
+                    st.session_state.markdown_text = markdown_text
 
-                status_placeholder.info("Generating embeddings...")
-                progress_bar.progress(50)
+                    status_placeholder.info("Generating embeddings...")
+                    progress_bar.progress(50)
+                    
+                    chunks = chunk_markdown(markdown_text)
+                    st.session_state.chunks = chunks
+
+                    embeddata = EmbedData(batch_size=8)
+                    embeddata.embed(chunks)
+                    save_embeddings(embeddata, f"embeddings_{name}.pkl")
+
+                    st.session_state.embeddata = embeddata
                 
-                chunks = chunk_markdown(markdown_text)
-                st.session_state.chunks = chunks
-
-                embeddata = EmbedData(batch_size=8)
-                embeddata.embed(chunks)
-                save_embeddings(embeddata, "embeddings_attention.pkl")
-
-                st.session_state.embeddata = embeddata
+                else:
+                    # se avevo già calcolato l'embeddings lo ricarico invece di ricalcolarmelo
+                    embeddata = load_embeddings(f"embeddings_{name}.pkl")
 
                 status_placeholder.info("Indexing the document...")
                 progress_bar.progress(80)
@@ -104,7 +125,7 @@ with st.sidebar:
                 
         else:
             st.success("Ready to Chat...")  
-        display_pdf(uploaded_file)
+        # display_pdf(uploaded_file)
 
             
 
@@ -137,9 +158,14 @@ if prompt := st.chat_input("Ask a question..."):
     
         with st.spinner("Thinking..."):
         
-            rag = st.session_state.get("rag")
-            response_text = rag.query(prompt)
-            message_placeholder.markdown(response_text)
+            rag = st.session_state.get("rag")   
+
+            if rag is None:
+                st.warning("Please upload a PDF to initialize the RAG system first.")
+            else:
+                response_text = rag.query(prompt, difficulty=st.session_state.difficulty)
+                message_placeholder.markdown(response_text)
+
             
 
     # Store assistant response

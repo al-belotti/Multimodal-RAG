@@ -1,9 +1,13 @@
 from docling.document_converter import DocumentConverter, PdfFormatOption
 from docling.datamodel.base_models import InputFormat
-from docling.datamodel.pipeline_options import PdfPipelineOptions, TesseractOcrOptions, AcceleratorDevice, AcceleratorOptions
+from docling.pipeline.vlm_pipeline import VlmPipeline
+from docling.datamodel import vlm_model_specs
+from docling.datamodel.pipeline_options import PdfPipelineOptions, VlmPipelineOptions, AcceleratorDevice, AcceleratorOptions
 import re
 from src.summaries_images import summaries
 from collections import OrderedDict
+
+#The VlmPipeline in Docling allows you to convert documents end-to-end using a vision-language model.
 
 summaries = OrderedDict(summaries)  # ensure insertion order is preserved
 
@@ -23,7 +27,8 @@ def replace_base64_images(md_text, summary_dict):
     return re.sub(pattern, replacement, md_text)
 
 
-def convert_pdf_to_markdown(pdf_path: str, output_path: str = "output/output.md") -> str:
+def convert_pdf_to_markdown(pdf_path: str, output_path: str = "output/output.md") -> str:  
+    # Configura pipeline PDF (OCR + estrazione immagini)
     pipeline_options = PdfPipelineOptions(
         do_ocr=True,
         do_table_structure=True,
@@ -32,19 +37,30 @@ def convert_pdf_to_markdown(pdf_path: str, output_path: str = "output/output.md"
         do_formula_enrichment=True,
         images_scale=2,
         table_structure_options={"do_cell_matching": True},
-        ocr_options=TesseractOcrOptions(),
-        accelerator_options=AcceleratorOptions(num_threads=4, device=AcceleratorDevice.CPU),
+        accelerator_options=AcceleratorOptions(),
     )
 
-    format_options = {InputFormat.PDF: PdfFormatOption(pipeline_options=pipeline_options)}
-    converter = DocumentConverter(format_options=format_options)
-    
+    converter = DocumentConverter(
+        format_options={
+            InputFormat.PDF: 
+                PdfFormatOption(
+                    pipeline_options=pipeline_options,
+                )
+        }
+    )
+
+    # Converte PDF in Docling Document
     result = converter.convert(pdf_path)
-    markdown_text = result.document.export_to_markdown(image_mode="embedded")
-    new_markdown = replace_base64_images(markdown_text, summaries.copy())  # copy to preserve original
-    markdown_text = new_markdown
+    document = result.document
+   
+    markdown_text = document.export_to_markdown(image_mode="embedded")
+
     # Save markdown
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(markdown_text)
 
     return markdown_text
+
+# 334 sec per standardPdfPipeline per attention.pdf
+# 1382 sec  per standardPdfPipeline per analisi1.pdf
+# 786 sec  per standardPdfPipeline per analisi1.pdf
