@@ -11,7 +11,7 @@ os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
 
 
 print("Identifying document layout...")
-path = "economia.pdf"
+path = "attention.pdf"
 name = path.rsplit('.', 1)[0]
 
 print(f"filename: {name}")
@@ -21,10 +21,10 @@ found = any(
    for f in os.listdir('.')
 )
 
-# print(f">>>>>>>>{convert_pdf_to_markdown("./docs/economia.pdf")}")
+# print(f">>>>>>>>{convert_pdf_to_markdown("./docs/attention.pdf")}")
 
 if not found:
-   markdown_text = convert_pdf_to_markdown("./docs/economia.pdf")
+   markdown_text = convert_pdf_to_markdown("./docs/attention.pdf")
 
    print("------FINISHING-------------")
    print("Generating embeddings...")
@@ -45,7 +45,7 @@ database.ingest_data(embeddata)
 
 retriever = Retriever(database, embeddata=embeddata)
 rag = RAG(retriever)
-# print(f">>>>{rag.generate_context("generate an exam question facsimile about economy exam of university")}")
+# print(f">>>>{rag.generate_context("generate an exam question facsimile about self attention mechanism exam of university")}")
 
 print("Prompting....")
 prompt = """
@@ -53,4 +53,4 @@ prompt = """
 generate an example of question related to economy exam in university
 """
 response_text = rag.query(prompt, "medium")
-# print(f"-----------> {response_text}")
+print(f"-----------> {response_text}")

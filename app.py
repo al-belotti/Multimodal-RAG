@@ -18,6 +18,12 @@ from src.retriever import Retriever
 from src.rag_engine import RAG
 from llama_index.core import Settings
 
+# Configurazioni della pagina
+st.set_page_config(
+    page_title="Exam Trainer Agent",
+    page_icon="./images/logo1.jpeg"
+)
+
 if "id" not in st.session_state:
     st.session_state.id = uuid.uuid4()
     st.session_state.file_cache = {}
@@ -43,21 +49,12 @@ def display_pdf(file):
 
 # Sidebar: Upload Document
 with st.sidebar:
-    st.markdown("<h1 style='text-align: center;'>🤖  Multimodal RAG - Query your document</h1>", unsafe_allow_html=True)
+    st.image("./images/cluster_reply.png")
+
+    st.markdown("<h1 style='text-align: center;'> Use Exam Trainer Agent to test yourself</h1>", unsafe_allow_html=True)
     st.header("Upload your PDF")
     uploaded_file = st.file_uploader("", type="pdf")
 
-    # Difficulty slider: map 1,2,3 to Easy, Medium, Hard
-    difficulty_map = {1: "easy", 2: "medium", 3: "hard"}
-    difficulty_level = st.slider(
-        "Select question difficulty",
-        min_value=1,
-        max_value=3,
-        value=2,  # default medium
-        format="%d"
-    )
-    # Store selected difficulty in session_state
-    st.session_state.difficulty = difficulty_map[difficulty_level]
     
 
     if uploaded_file:
@@ -125,14 +122,6 @@ with st.sidebar:
                 
         else:
             st.success("Ready to Chat...")  
-        # display_pdf(uploaded_file)
-
-            
-
-col1, col2 = st.columns([6, 1])
-
-with col2:
-    st.button("Clear ↺", on_click=reset_chat)
 
 # Initialize chat history
 if "messages" not in st.session_state:
@@ -163,12 +152,10 @@ if prompt := st.chat_input("Ask a question..."):
             if rag is None:
                 st.warning("Please upload a PDF to initialize the RAG system first.")
             else:
-                response_text = rag.query(prompt, difficulty=st.session_state.difficulty)
+                response_text = rag.query(prompt)
                 message_placeholder.markdown(response_text)
 
             
 
     # Store assistant response
     st.session_state.messages.append({"role": "assistant", "content": response_text})
-
-

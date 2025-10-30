@@ -5,7 +5,7 @@ from llama_index.llms.ollama import Ollama
 
 
 load_dotenv(override=True)
-LOCAL_SETTINGS = True
+LOCAL_SETTINGS = False
 
 class RAG:
     def __init__(self, retriever):  #  llama3.2:latest or gpt-5 or tinyllama:1.1b 
@@ -34,14 +34,13 @@ class RAG:
 
                 1. **Number of questions:** 1  
                 2. **Question type:** Open-ended (short essay or problem-solving)  
-                3. **Difficulty level:** the the difficulty level and deepness of the question has to be {difficulty}
-                4. **Content level:** University level (intermediate to advanced), aligned with the topic in `{context}`.  
-                5. **LaTeX formatting:**  
+                3. **Content level:** University level (intermediate to advanced), aligned with the topic in `{context}`.  
+                4. **LaTeX formatting:**  
                 - Use inline math between single dollar signs `$...$`  
                 - Use block math between double dollar signs `$$...$$`  
                 - Do not escape backslashes
-                6. **Tone:** Professional and educational
-                7. **Output format:**  
+                5. **Tone:** Professional and educational
+                6. **Output format:**  
 
                     ```
                     **Open-ended Question**
@@ -102,7 +101,7 @@ class RAG:
 
         return "\n\n---\n\n".join(combined_prompt)
 
-    def query(self, query, difficulty):
+    def query(self, query):
         """
         Questo metodo gestisce:
         - Prima interazione: genera una domanda aperta
@@ -117,7 +116,7 @@ class RAG:
 
             if LOCAL_SETTINGS:
                 response = self.llm.complete(evaluation_prompt)
-                print(f">>>>> {response}")
+                # print(f">>>>> {response}")
                 assistant_reply = dict(response)['text']       
             else:
                 response = self.llm.chat.completions.create(
@@ -131,7 +130,7 @@ class RAG:
 
 
 
-            # Reset dello storico dopo la valutazione
+            # ✂️ Reset dello storico dopo la valutazione
             self.conversation_history = []
             self.last_question = None
 
@@ -139,11 +138,11 @@ class RAG:
 
         # Altrimenti è la prima domanda → generiamo una open-ended question
         context = self.generate_context(query)
-        prompt = self.qa_prompt_tmpl_str.format(context=context, difficulty=difficulty, query=query)
+        prompt = self.qa_prompt_tmpl_str.format(context=context, query=query)
 
         if LOCAL_SETTINGS:
             response = self.llm.complete(prompt)
-            print(f">>>>> {response}")
+            # print(f">>>>> {response}")
             assistant_reply = dict(response)['text']
         else:
             response = self.llm.chat.completions.create(
@@ -157,7 +156,7 @@ class RAG:
         
 
 
-        # Aggiorna storico (massimo 3 messaggi)
+        # 🧠 Aggiorna storico (massimo 3 messaggi)
         self.conversation_history = [
             {"role": "user", "content": query},
             {"role": "assistant", "content": assistant_reply}
