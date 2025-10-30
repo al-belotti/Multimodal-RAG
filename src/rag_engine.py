@@ -17,10 +17,10 @@ class RAG:
         self.llm = self._setup_llm()
         self.retriever = retriever
 
-        # 🧠 Storico limitato a 3 messaggi (user, assistant, user)
+        # Storico limitato a 3 messaggi (user, assistant, user)
         self.conversation_history = []
 
-        # 📝 Memorizziamo separatamente l'ultima domanda dell'assistente
+        # Memorizziamo separatamente l'ultima domanda dell'assistente
         self.last_question = None
 
         self.qa_prompt_tmpl_str = """
