@@ -130,7 +130,7 @@ class RAG:
 
 
 
-            # ✂️ Reset dello storico dopo la valutazione
+            # Reset dello storico dopo la valutazione
             self.conversation_history = []
             self.last_question = None
 
@@ -156,7 +156,7 @@ class RAG:
         
 
 
-        # 🧠 Aggiorna storico (massimo 3 messaggi)
+        # Aggiorna storico (massimo 3 messaggi)
         self.conversation_history = [
             {"role": "user", "content": query},
             {"role": "assistant", "content": assistant_reply}
