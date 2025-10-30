@@ -21,6 +21,8 @@ found = any(
    for f in os.listdir('.')
 )
 
+# print(f">>>>>>>>{convert_pdf_to_markdown("./docs/economia.pdf")}")
+
 if not found:
    markdown_text = convert_pdf_to_markdown("./docs/economia.pdf")
 
@@ -43,10 +45,12 @@ database.ingest_data(embeddata)
 
 retriever = Retriever(database, embeddata=embeddata)
 rag = RAG(retriever)
+# print(f">>>>{rag.generate_context("generate an exam question facsimile about economy exam of university")}")
 
 print("Prompting....")
 prompt = """
-   generate an exam question facsimile about analisi1
+   
+generate an example of question related to economy exam in university
 """
 response_text = rag.query(prompt, "medium")
 # print(f"-----------> {response_text}")

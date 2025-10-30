@@ -5,7 +5,7 @@ from llama_index.llms.ollama import Ollama
 
 
 load_dotenv(override=True)
-LOCAL_SETTINGS = False
+LOCAL_SETTINGS = True
 
 class RAG:
     def __init__(self, retriever):  #  llama3.2:latest or gpt-5 or tinyllama:1.1b 
@@ -131,7 +131,7 @@ class RAG:
 
 
 
-            # ✂️ Reset dello storico dopo la valutazione
+            # Reset dello storico dopo la valutazione
             self.conversation_history = []
             self.last_question = None
 
@@ -157,7 +157,7 @@ class RAG:
         
 
 
-        # 🧠 Aggiorna storico (massimo 3 messaggi)
+        # Aggiorna storico (massimo 3 messaggi)
         self.conversation_history = [
             {"role": "user", "content": query},
             {"role": "assistant", "content": assistant_reply}
