@@ -69,11 +69,16 @@ class RAG:
         {user_answer}
 
         Your task:
-        - Check if the answer is relevant and correct regarding the question.
-        - Provide constructive feedback.
-        - If correct or partially correct → positive feedback + short explanation.
-        - If incorrect → constructive feedback + correct answer.
-        - Answer in English.
+            1. Assess the answer for relevance, accuracy, completeness, and clarity.
+            2. Assign a **numerical grade from 0 to 100**. Round to the nearest whole number.
+            3. Provide constructive feedback and explain **exactly why you assigned this grade**.
+            4. Use the following strict output format:
+                - Check if the answer is relevant and correct regarding the question.
+                - Provide constructive feedback.
+                - If correct or partially correct → positive feedback + short explanation.
+                - If incorrect → constructive feedback + correct answer.
+                - Answer in English.
+        
         """
 
     def _setup_llm(self):
