@@ -87,7 +87,7 @@ README.md                 # You're reading it
 
 ## References
 
-* [Docker](https://code.visualstudio.com/docs/containers/overview)
+* [Docker installation](https://code.visualstudio.com/docs/containers/overview)
 * [Docling](https://github.com/docling-project/docling)
 * [Streamlit Chat UI](https://docs.streamlit.io/develop/tutorials/chat-and-llm-apps/build-conversational-apps)
 * [Qdrant Vector DB](https://qdrant.tech/)
