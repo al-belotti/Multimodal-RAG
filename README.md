@@ -66,19 +66,22 @@ README.md                 # You're reading it
 
 ## Demo (Local Setup)
 
-1. **Install dependencies**:
+1. **Install Docker from the official website**  
+   You can install Docker following the instructions on the [official Docker website](https://www.docker.com/get-started) or refer to the [Visual Studio Code Containers guide](https://code.visualstudio.com/docs/containers/overview) for setting up Docker integration in VS Code.
+
+2. **Install dependencies**:
 
    ```bash
    pip install -r requirements.txt
    ```
 
-2. **Start Qdrant locally using Docker**:
+3. **Start Qdrant locally using Docker**:
 
    ```bash
    docker run -p 6333:6333 qdrant/qdrant
    ```
 
-3. **Run the app**:
+4. **Run the app**:
 
    ```bash
    streamlit run app.py
@@ -87,7 +90,7 @@ README.md                 # You're reading it
 
 ## References
 
-* [Docker installation](https://code.visualstudio.com/docs/containers/overview)
+* [Docker](https://www.docker.com/get-started)
 * [Docling](https://github.com/docling-project/docling)
 * [Streamlit Chat UI](https://docs.streamlit.io/develop/tutorials/chat-and-llm-apps/build-conversational-apps)
 * [Qdrant Vector DB](https://qdrant.tech/)
