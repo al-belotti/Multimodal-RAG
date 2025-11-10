@@ -50,13 +50,12 @@ README.md                 # You're reading it
 
 1. **PDF Upload**: Users upload a PDF in the sidebar.
 2. **Docling**: PDF is converted to markdown (with layout + tables + image data).
-3. **Image Summaries**: Base64 images are replaced by prewritten summaries for clarity (obtained using OpenAI -4o for better results).
-4. **Chunking + Embedding**:
+3. **Chunking + Embedding**:
 
    * Tokenized into 1024-token overlapping chunks.
    * Embedded using `nomic-embed-text-v1.5`.
-5. **Indexing**: Embeddings are stored in a **Qdrant vector DB**.
-6. **Querying**:
+4. **Indexing**: Embeddings are stored in a **Qdrant vector DB**.
+5. **Querying**:
 
    * User queries are embedded.
    * Top-7 relevant chunks are retrieved using **dot-product similarity**.
