@@ -75,7 +75,10 @@ README.md                 # You're reading it
    pip install -r requirements.txt
    ```
 
-3. **Start Qdrant locally using Docker**:
+3. **Start Qdrant locally using Docker**
+   Qdrant is used for vector storage and similarity search. You can find the official Qdrant image and detailed setup instructions on [Docker Hub](https://hub.docker.com/r/qdrant/qdrant).
+
+   Then run the following command to start Qdrant locally:
 
    ```bash
    docker run -p 6333:6333 qdrant/qdrant
