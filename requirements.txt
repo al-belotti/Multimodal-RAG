@@ -1,32 +1,13 @@
-# 🖥️ Streamlit — easy way to build interactive web apps for your AI project
-streamlit
-
-# 🔁 Nest Asyncio — allows nested event loops (useful when using async code in notebooks or Streamlit)
-nest_asyncio
-
-# 📄 Docling — helps parse and extract text from PDF, DOCX, images, etc.
-docling
-
-# 🧠 Qdrant Client — Python SDK to interact with Qdrant (a vector database)
-qdrant-client
-
-# 🌱 Python Dotenv — loads environment variables from a .env file (e.g. API keys)
-python-dotenv
-
-# 🤖 OpenAI — official SDK for calling OpenAI models and embeddings
-openai
-
-# ⏳ TQDM — shows progress bars for loops and background processes
-tqdm
-
-# 🧬 Transformers — powerful NLP/multimodal library from Hugging Face
-transformers
-
-# 🦙 Llama Index — framework to build Retrieval-Augmented Generation (RAG) pipelines
-llama-index
-llama_index.embeddings.huggingface
-
-AzureOpenAI
-einops
-gpt-oss
-mlx-vlm
+azureopenai==0.0.1
+docling==2.56.1
+einops==0.8.1
+gpt-oss==0.0.8
+llama-index==0.14.4
+llama-index-embeddings-huggingface==0.6.1
+nest-asyncio==1.6.0
+openai==1.109.1
+python-dotenv==1.1.1
+qdrant-client==1.15.1
+streamlit==1.50.0
+transformers==4.57.0
+tqdm==4.67.1

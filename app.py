@@ -21,7 +21,7 @@ from llama_index.core import Settings
 # Configurazioni della pagina
 st.set_page_config(
     page_title="Exam Trainer Agent",
-    page_icon="./images/logo1.jpeg"
+    page_icon="./images/logo1.png"
 )
 
 if "id" not in st.session_state:

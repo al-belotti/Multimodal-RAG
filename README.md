@@ -72,7 +72,7 @@ README.md                 # You're reading it
    pip install -r requirements.txt
    ```
 
-2. **Start Qdrant locally**:
+2. **Start Qdrant locally using Docker**:
 
    ```bash
    docker run -p 6333:6333 qdrant/qdrant
@@ -87,6 +87,7 @@ README.md                 # You're reading it
 
 ## References
 
+* [Docker](https://code.visualstudio.com/docs/containers/overview)
 * [Docling](https://github.com/docling-project/docling)
 * [Streamlit Chat UI](https://docs.streamlit.io/develop/tutorials/chat-and-llm-apps/build-conversational-apps)
 * [Qdrant Vector DB](https://qdrant.tech/)
