@@ -1,7 +1,6 @@
 import os
 from dotenv import load_dotenv
 from openai import AzureOpenAI
-from llama_index.llms.ollama import Ollama
 
 
 load_dotenv(override=True)
