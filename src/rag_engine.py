@@ -1,21 +1,24 @@
 import os
 from dotenv import load_dotenv
 from openai import AzureOpenAI
+from llama_index.llms.ollama import Ollama
 
 
 load_dotenv(override=True)
+LOCAL_SETTINGS = False
 
 class RAG:
-    def __init__(self, retriever):  #  llama3.2:latest or gpt-5 or tinyllama:1.1b 
-        self.llm_name = 'gpt-5'
+    def __init__(self, retriever):  
+        if LOCAL_SETTINGS:
+            self.llm_name = 'llama3.2:latest'
+        else:
+            self.llm_name = 'gpt-5'
 
         self.llm = self._setup_llm()
         self.retriever = retriever
 
-        # Storico limitato a 3 messaggi (user, assistant, user)
         self.conversation_history = []
 
-        # Memorizziamo separatamente l'ultima domanda dell'assistente
         self.last_question = None
 
         self.qa_prompt_tmpl_str = """
@@ -29,13 +32,14 @@ class RAG:
 
                 1. **Number of questions:** 1  
                 2. **Question type:** Open-ended (short essay or problem-solving)  
-                3. **Content level:** University level (intermediate to advanced), aligned with the topic in `{context}`.  
-                4. **LaTeX formatting:**  
+                3. **Difficulty level:** the the difficulty level and deepness of the question has to be {difficulty}
+                4. **Content level:** University level (intermediate to advanced), aligned with the topic in `{context}`.  
+                5. **LaTeX formatting:**  
                 - Use inline math between single dollar signs `$...$`  
                 - Use block math between double dollar signs `$$...$$`  
                 - Do not escape backslashes
-                5. **Tone:** Professional and educational
-                6. **Output format:**  
+                6. **Tone:** Professional and educational
+                7. **Output format:**  
 
                     ```
                     **Open-ended Question**
@@ -66,7 +70,7 @@ class RAG:
 
         User Answer:
         {user_answer}
-
+        
         Your task:
             1. Assess the answer for relevance, accuracy, completeness, and clarity.
             2. Assign a **numerical grade from 0 to 100**. Round to the nearest whole number.
@@ -77,15 +81,17 @@ class RAG:
                 - If correct or partially correct → positive feedback + short explanation.
                 - If incorrect → constructive feedback + correct answer.
                 - Answer in English.
-        
         """
 
     def _setup_llm(self):
-        return AzureOpenAI(
-            api_version=os.environ["AZURE_OPENAI_API_VERSION"],
-            api_key=os.environ["AZURE_OPENAI_API_KEY"],
-            azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
-        )
+        if LOCAL_SETTINGS:
+            return Ollama(model=self.llm_name, request_timeout=300000)   # in mms
+        else:
+            return AzureOpenAI(
+                api_version=os.environ["AZURE_OPENAI_API_VERSION"],
+                api_key=os.environ["AZURE_OPENAI_API_KEY"],
+                azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
+            )
 
     def generate_context(self, query):
         result = self.retriever.search(query)
@@ -98,59 +104,71 @@ class RAG:
 
         return "\n\n---\n\n".join(combined_prompt)
 
-    def query(self, query):
+    def query(self, query, difficulty):
         """
-        Questo metodo gestisce:
-        - Prima interazione: genera una domanda aperta
-        - Seconda interazione: valuta la risposta rispetto all'ultima domanda
+        Handles conversation flow:
+        - If no active question → generate an open-ended question.
+        - If there is an active question → evaluate or continue the discussion.
         """
-        # Se abbiamo già una domanda precedente, allora la nuova query è una risposta
+
+        # If there's an ongoing conversation (user is responding or retrying)
         if self.last_question:
+            # Append new user message to conversation history
+            self.conversation_history.append({"role": "user", "content": query})
+
+            # Build evaluation prompt dynamically from conversation
             evaluation_prompt = self.evaluation_prompt.format(
                 question=self.last_question,
                 user_answer=query
             )
 
-            response = self.llm.chat.completions.create(
-                model=self.llm_name,
-                messages=[
-                    {"role": "system", "content": "You are a helpful evaluator."},
-                    {"role": "user", "content": evaluation_prompt},
-                ]
-            )
-            assistant_reply = response.choices[0].message.content
+            # Add evaluator system prompt
+            messages = [{"role": "system", "content": "You are a university evaluator."}]
+            messages.extend(self.conversation_history)  # Include full conversation
 
+            # Include the new evaluation prompt
+            messages.append({"role": "user", "content": evaluation_prompt})
 
+            if LOCAL_SETTINGS:
+                response = self.llm.complete(evaluation_prompt)
+                assistant_reply = dict(response)['text']
+            else:
+                response = self.llm.chat.completions.create(
+                    model=self.llm_name,
+                    messages=messages,
+                )
+                assistant_reply = response.choices[0].message.content
 
-            # Reset dello storico dopo la valutazione
-            self.conversation_history = []
-            self.last_question = None
+            # Save the assistant reply for further improvement attempts
+            self.conversation_history.append({"role": "assistant", "content": assistant_reply})
 
             return assistant_reply
 
-        # Altrimenti è la prima domanda → generiamo una open-ended question
+        # Otherwise, it's a new question
         context = self.generate_context(query)
-        prompt = self.qa_prompt_tmpl_str.format(context=context, query=query)
+        prompt = self.qa_prompt_tmpl_str.format(context=context, difficulty=difficulty, query=query)
 
-        response = self.llm.chat.completions.create(
-            model=self.llm_name,
-            messages=[
-                {"role": "system", "content": "You are a helpful assistant."},
-                {"role": "user", "content": prompt},
-            ]
-        )
-        assistant_reply = response.choices[0].message.content
-        
+        messages = [
+            {"role": "system", "content": "You are a university examiner."},
+            {"role": "user", "content": prompt}
+        ]
 
+        if LOCAL_SETTINGS:
+            response = self.llm.complete(prompt)
+            assistant_reply = dict(response)['text']
+        else:
+            response = self.llm.chat.completions.create(
+                model=self.llm_name,
+                messages=messages
+            )
+            assistant_reply = response.choices[0].message.content
 
-        # Aggiorna storico (massimo 3 messaggi)
+        # Update conversation history
         self.conversation_history = [
             {"role": "user", "content": query},
             {"role": "assistant", "content": assistant_reply}
         ]
-
-        # Salva l'ultima domanda dell'assistente per la valutazione futura
         self.last_question = assistant_reply
 
         return assistant_reply
-    
+

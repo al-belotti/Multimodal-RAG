@@ -1,6 +1,7 @@
 ## Adapted from streamlit tutorial. Refrence link below:
 # https://docs.streamlit.io/develop/tutorials/chat-and-llm-apps/build-conversational-apps)
 
+
 import streamlit as st
 import os
 import base64
@@ -36,6 +37,14 @@ def reset_chat():
     st.session_state.context = None
     gc.collect()
 
+    # Reset the current question in RAG
+    rag = st.session_state.get("rag")
+    if rag:
+        rag.last_question = None
+        rag.conversation_history = []
+
+    st.success("Chat cleared. You can start a new question now.")
+
 # Function to display the uploaded PDF in the app
 def display_pdf(file):
     st.markdown("### 📄 PDF Preview")
@@ -55,6 +64,17 @@ with st.sidebar:
     st.header("Upload your PDF")
     uploaded_file = st.file_uploader("", type="pdf")
 
+    # Difficulty slider: map 1,2,3 to Easy, Medium, Hard
+    difficulty_map = {1: "easy", 2: "medium", 3: "hard"}
+    difficulty_level = st.slider(
+        "Select question difficulty",
+        min_value=1,
+        max_value=3,
+        value=2,  # default medium
+        format="%d"
+    )
+    # Store selected difficulty in session_state
+    st.session_state.difficulty = difficulty_map[difficulty_level]
     
 
     if uploaded_file:
@@ -122,6 +142,12 @@ with st.sidebar:
                 
         else:
             st.success("Ready to Chat...")  
+            
+
+    col1, col2, col3 = st.columns([1, 1, 1])
+
+    with col2:
+        st.button("Clear ↺", on_click=reset_chat)
 
 # Initialize chat history
 if "messages" not in st.session_state:
@@ -135,7 +161,7 @@ for message in st.session_state.messages:
 
 # Accept user query
 if prompt := st.chat_input("Ask a question..."):
-
+    
     # Store and display user message
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -152,10 +178,12 @@ if prompt := st.chat_input("Ask a question..."):
             if rag is None:
                 st.warning("Please upload a PDF to initialize the RAG system first.")
             else:
-                response_text = rag.query(prompt)
+                response_text = rag.query(prompt, difficulty=st.session_state.difficulty)
                 message_placeholder.markdown(response_text)
 
             
 
     # Store assistant response
     st.session_state.messages.append({"role": "assistant", "content": response_text})
+
+
